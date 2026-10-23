@@ -1,0 +1,320 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#e8ddbd">
+<title>Field Manual No. 01 — ESP32 Voice + Joystick AI Terminal</title>
+<style>
+:root {
+  color-scheme: light dark;
+  --site-primary: #762a28;
+  --site-secondary: #24211d;
+  --site-background: #e8ddbd;
+  --site-on-primary: #fff5df;
+  --site-on-secondary: #f2e7cb;
+  --site-on-background: #28231f;
+  --site-font-body: "Palatino Linotype", Palatino, Georgia, serif;
+  --site-font-heading: "Arial Narrow", "Roboto Condensed", Impact, sans-serif;
+  --site-heading-scale: 1;
+  --site-spacing-scale: 1;
+  --site-radius-scale: 1;
+  --site-decoration-opacity: 1;
+  --paper: #e8ddbd;
+  --paper-light: #f3e9ce;
+  --ink: #28231f;
+  --red: #762a28;
+  --red-dark: #4a1d1b;
+  --rule: rgba(40,35,31,.32);
+  --muted: #66594b;
+  --shadow: rgba(47,31,22,.14);
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; scroll-padding-top: 1.2rem; }
+body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--site-font-body); line-height: 1.58; }
+#app { min-height: 100vh; width: 100%; border-radius: 0; background-color: var(--site-background); color: var(--site-on-background); position: relative; overflow: hidden; }
+#app::before { content: ""; pointer-events: none; position: absolute; inset: 0; opacity: calc(.12 * var(--site-decoration-opacity)); background-image: radial-gradient(#5a4430 .55px, transparent .7px); background-size: 5px 5px; mix-blend-mode: multiply; }
+a { color: var(--red); text-decoration-thickness: 1px; text-underline-offset: 3px; }
+a:hover { color: var(--red-dark); }
+button, input { font: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 3px solid var(--red); outline-offset: 3px; }
+.skip { position: absolute; left: -9999px; top: auto; }
+.skip:focus { left: 1rem; top: 1rem; z-index: 10; background: var(--paper-light); padding: .6rem; }
+.masthead { position: relative; z-index: 1; max-width: 1180px; margin: auto; padding: 1.2rem clamp(1rem, 4vw, 3rem) .8rem; border-bottom: 1px solid var(--ink); display: flex; justify-content: space-between; align-items: center; gap: 1rem; text-transform: uppercase; font: 700 .72rem/1.3 var(--site-font-heading); letter-spacing: .12em; }
+.masthead .seal { color: var(--red); display: flex; align-items: center; gap: .55rem; }
+.seal-mark { border: 1px solid currentColor; border-radius: 50%; width: 2rem; height: 2rem; display: grid; place-items: center; font: 700 .85rem Georgia, serif; }
+.masthead nav { display: flex; gap: 1.2rem; flex-wrap: wrap; }
+.masthead nav a { color: var(--ink); text-decoration: none; }
+.hero { max-width: 1180px; margin: auto; padding: clamp(1.8rem, 4vw, 3.8rem) clamp(1rem, 4vw, 3rem) 2.5rem; position: relative; z-index: 1; }
+.poster { border: 3px double var(--red); outline: 1px solid var(--red); outline-offset: 5px; padding: clamp(1rem, 3vw, 2.4rem); text-align: center; position: relative; background: rgba(243,233,206,.44); box-shadow: 0 9px 22px var(--shadow); }
+.poster::before, .poster::after { content: "✦  ❧  ✦"; color: var(--red); letter-spacing: .45em; display: block; font-size: 1rem; opacity: .9; }
+.eyebrow { margin: .9rem 0 .3rem; color: var(--red); text-transform: uppercase; letter-spacing: .22em; font: 700 .75rem var(--site-font-heading); }
+h1, h2, h3 { font-weight: 900; line-height: .98; text-transform: uppercase; }
+h1 { font-family: var(--site-font-heading); font-stretch: condensed; font-size: clamp(2.5rem, 8.5vw, 7.4rem); letter-spacing: -.035em; margin: .2rem auto .8rem; max-width: 1000px; color: var(--red); text-shadow: 1px 1px 0 #c5b18c; }
+.hero-sub { max-width: 650px; margin: 0 auto 1.25rem; font-size: clamp(1rem, 1.8vw, 1.2rem); }
+.hero-actions { display: flex; justify-content: center; gap: .7rem; flex-wrap: wrap; margin: 1.3rem 0 .6rem; }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: .4rem; border: 1px solid var(--red); background: var(--red); color: var(--paper-light); padding: .72rem 1rem; text-transform: uppercase; letter-spacing: .08em; font: 700 .77rem var(--site-font-heading); text-decoration: none; box-shadow: 3px 3px 0 var(--red-dark); }
+.btn:hover { transform: translate(1px,1px); box-shadow: 2px 2px 0 var(--red-dark); color: white; }
+.btn.secondary { background: transparent; color: var(--red); box-shadow: none; }
+.ornament { color: var(--red); font-size: 1.5rem; margin: .7rem 0 0; }
+.hero-facts { max-width: 900px; margin: 1.8rem auto 0; display: grid; grid-template-columns: repeat(3, 1fr); border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule); }
+.hero-facts div { padding: .85rem .5rem; }
+.hero-facts div + div { border-left: 1px solid var(--rule); }
+.hero-facts strong { display: block; color: var(--red); text-transform: uppercase; font: 800 .76rem var(--site-font-heading); letter-spacing: .08em; }
+.hero-facts span { font-size: .9rem; }
+.layout { position: relative; z-index: 1; max-width: 1180px; margin: auto; padding: 0 clamp(1rem, 4vw, 3rem) 4rem; display: grid; grid-template-columns: 230px minmax(0, 1fr); gap: clamp(1.4rem, 3vw, 3rem); align-items: start; }
+.sidebar { position: sticky; top: 1rem; border: 1px solid var(--rule); padding: 1rem; background: rgba(243,233,206,.6); }
+.sidebar h2 { font: 800 .95rem var(--site-font-heading); letter-spacing: .1em; color: var(--red); margin: 0 0 .8rem; }
+.sidebar ol { list-style: none; counter-reset: nav; padding: 0; margin: 0; }
+.sidebar li { border-top: 1px solid var(--rule); counter-increment: nav; }
+.sidebar a { display: block; padding: .53rem 0; text-decoration: none; color: var(--ink); font-size: .9rem; }
+.sidebar a::before { content: counter(nav, decimal-leading-zero) " / "; color: var(--red); font: 700 .7rem var(--site-font-heading); }
+.sidebar a:hover { color: var(--red); padding-left: .2rem; }
+.content { min-width: 0; }
+.chapter { border-top: 3px double var(--red); padding: 1.6rem 0 2rem; scroll-margin-top: 1rem; }
+#wiring, #arduino, #limits, #checklist { display: none !important; }
+.chapter:first-child { border-top: 0; padding-top: .2rem; }
+.chapter-kicker { color: var(--red); text-transform: uppercase; font: 800 .7rem var(--site-font-heading); letter-spacing: .18em; margin: 0 0 .5rem; }
+h2 { color: var(--red); font-family: var(--site-font-heading); font-size: clamp(1.75rem, 4vw, 3rem); margin: 0 0 .8rem; letter-spacing: -.015em; }
+h3 { color: var(--ink); font: 800 1.15rem/1.1 var(--site-font-heading); letter-spacing: .03em; margin: 1.3rem 0 .55rem; }
+p { margin: .55rem 0 .8rem; }
+.lede { font-size: 1.08rem; max-width: 760px; }
+.callout { margin: 1.1rem 0; padding: .9rem 1rem; border-left: 4px solid var(--red); background: rgba(118,42,40,.075); }
+.callout strong { color: var(--red); }
+.warning { border-left-color: #9c3e20; background: rgba(156,62,32,.09); }
+.table-wrap { overflow-x: auto; margin: .8rem 0 1.2rem; border: 1px solid var(--rule); }
+table { width: 100%; border-collapse: collapse; font-size: .92rem; min-width: 440px; }
+th { background: var(--red); color: var(--paper-light); text-align: left; text-transform: uppercase; letter-spacing: .06em; font: 700 .72rem var(--site-font-heading); }
+th, td { padding: .62rem .7rem; border-bottom: 1px solid var(--rule); vertical-align: top; }
+tbody tr:nth-child(even) { background: rgba(118,42,40,.045); }
+td:first-child { font-weight: 700; }
+code, .mono { font-family: Consolas, "Courier New", monospace; font-size: .88em; }
+code { background: rgba(40,35,31,.08); padding: .12rem .28rem; overflow-wrap: anywhere; }
+.codebox { position: relative; background: #25221e; color: #f3e9ce; padding: 1rem; margin: .8rem 0; border: 1px solid var(--red); overflow: auto; }
+.codebox pre { margin: 0; white-space: pre; line-height: 1.65; font: .85rem/1.65 Consolas, "Courier New", monospace; }
+.copy { position: absolute; right: .5rem; top: .5rem; background: var(--paper); color: var(--ink); border: 1px solid var(--paper-light); padding: .35rem .5rem; font: 700 .68rem var(--site-font-heading); text-transform: uppercase; }
+.steps { counter-reset: step; padding: 0; list-style: none; }
+.steps li { counter-increment: step; position: relative; padding: .15rem 0 .85rem 2.8rem; }
+.steps li::before { content: counter(step, decimal-leading-zero); position: absolute; left: 0; top: 0; width: 2rem; height: 2rem; border: 1px solid var(--red); border-radius: 50%; display: grid; place-items: center; color: var(--red); font: 700 .72rem var(--site-font-heading); }
+.grid-2 { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 1rem; }
+.rule-card { border: 1px solid var(--rule); padding: .9rem; background: rgba(243,233,206,.38); }
+.rule-card h3 { margin-top: .1rem; }
+.key { display: inline-block; border: 1px solid var(--rule); border-bottom-width: 3px; border-radius: 2px; padding: .05rem .35rem; font: 700 .8rem Consolas, monospace; background: var(--paper-light); white-space: nowrap; }
+.diagram { border: 1px solid var(--rule); padding: 1rem; margin: 1rem 0; background: rgba(243,233,206,.4); }
+.diagram-line { display: flex; justify-content: center; align-items: center; gap: .6rem; flex-wrap: wrap; text-align: center; }
+.diagram-node { border: 1px solid var(--red); color: var(--red); padding: .55rem .7rem; font: 700 .72rem var(--site-font-heading); text-transform: uppercase; }
+.diagram-arrow { color: var(--red); font-weight: bold; }
+.faq details { border-top: 1px solid var(--rule); padding: .7rem 0; }
+.faq summary { cursor: pointer; font-weight: 700; color: var(--red); }
+.checklist { list-style: none; padding: 0; }
+.checklist li { padding: .35rem 0; }
+.checklist input { accent-color: var(--red); margin-right: .5rem; }
+.search-box { width: 100%; border: 1px solid var(--rule); padding: .65rem .7rem; background: var(--paper-light); color: var(--ink); margin: .3rem 0 .8rem; }
+.no-results { display: none; padding: 1rem; border: 1px dashed var(--red); }
+.footer { max-width: 1180px; margin: auto; padding: 1rem clamp(1rem, 4vw, 3rem) 2rem; border-top: 1px solid var(--ink); position: relative; z-index: 1; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 1rem; font-size: .82rem; color: var(--muted); }
+.footer strong { color: var(--red); text-transform: uppercase; font: 800 .78rem var(--site-font-heading); letter-spacing: .08em; }
+@media (prefers-color-scheme: dark) {
+  :root { --site-primary: #d58c7d; --site-secondary: #24211d; --site-background: #201e1a; --site-on-primary: #201e1a; --site-on-secondary: #f2e7cb; --site-on-background: #eadfc7; --paper: #201e1a; --paper-light: #2b2822; --ink: #eadfc7; --red: #d58c7d; --red-dark: #a85b51; --rule: rgba(234,223,199,.28); --muted: #b5a68e; --shadow: rgba(0,0,0,.28); }
+  #app::before { mix-blend-mode: screen; opacity: calc(.07 * var(--site-decoration-opacity)); }
+  .poster, .sidebar, .rule-card, .diagram { background: rgba(255,255,255,.025); }
+  h1 { text-shadow: none; }
+  .btn { color: #211a17; }
+  .btn.secondary { color: var(--red); }
+  .search-box, .key { background: #302c25; color: var(--ink); }
+  .copy { background: #302c25; color: var(--ink); border-color: var(--rule); }
+}
+@media (max-width: 760px) {
+  .masthead { align-items: flex-start; }
+  .masthead nav { gap: .65rem; justify-content: flex-end; }
+  .masthead nav a { font-size: .65rem; }
+  .layout { grid-template-columns: 1fr; }
+  .sidebar { position: relative; top: auto; }
+  .sidebar ol { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); column-gap: .9rem; }
+  .hero-facts { grid-template-columns: 1fr; }
+  .hero-facts div + div { border-left: 0; border-top: 1px solid var(--rule); }
+  .grid-2 { grid-template-columns: 1fr; }
+  .poster { outline-offset: 3px; }
+}
+@media (max-width: 430px) {
+  .masthead { flex-direction: column; }
+  .masthead nav { justify-content: flex-start; }
+  .sidebar ol { grid-template-columns: 1fr; }
+  .hero { padding-top: 1.4rem; }
+  h1 { font-size: 2.6rem; }
+}
+@media print {
+  #app::before, .masthead nav, .hero-actions, .sidebar, .copy { display: none !important; }
+  .layout { display: block; }
+  body, #app { background: white !important; color: black !important; }
+  .chapter { break-inside: avoid; }
+  a { color: black; text-decoration: none; }
+}
+</style>
+</head>
+<body>
+<a class="skip" href="#manual">Skip to manual</a>
+<div id="app">
+<header class="masthead">
+  <div class="seal"><span class="seal-mark">01</span><span>Workshop Library<br>User Instructions</span></div>
+  <nav aria-label="Main navigation"><a href="#quickstart">Getting started</a><a href="#ble">Wi-Fi &amp; API keys</a><a href="#operation">How to use it</a><a href="#troubleshooting">Help</a></nav>
+</header>
+<section class="hero" aria-labelledby="title">
+  <div class="poster">
+    <p class="eyebrow">A practical handbook · Everyday use</p>
+    <h1 id="title">Voice &amp;<br>Joystick AI Terminal</h1>
+    <p class="hero-sub">A simple guide to connecting the terminal to Wi-Fi, entering your API keys, asking questions by voice or text, and reading its answers.</p>
+    <div class="ornament" aria-hidden="true">— ❧ —</div>
+    <div class="hero-actions"><a class="btn" href="#quickstart">Begin setup ↘</a><a class="btn secondary" href="#ble">Wi-Fi &amp; API setup</a></div>
+  <div class="hero-facts">
+      <div><strong>Voice input</strong><span>Ask by speaking</span></div>
+      <div><strong>Text input</strong><span>Type with the joystick</span></div>
+      <div><strong>Display</strong><span>Read answers on screen</span></div>
+    </div>
+  </div>
+</section>
+<main id="manual" class="layout">
+<aside class="sidebar" aria-label="Manual contents">
+  <h2>Contents / Index</h2>
+  <input id="search" class="search-box" type="search" placeholder="Find a topic…" aria-label="Search manual">
+  <ol id="toc">
+    <li><a href="#ble">Wi-Fi &amp; API setup</a></li><li><a href="#operation">Using the terminal</a></li><li><a href="#keyboard">Typing a question</a></li><li><a href="#troubleshooting">Troubleshooting</a></li><li><a href="#privacy">Keys &amp; privacy</a></li>
+  </ol>
+  <p class="no-results" id="no-results">No matching topics. Try “BLE”, “mic”, or “Wi-Fi”.</p>
+</aside>
+<div class="content">
+<section class="chapter" id="wiring" data-search="wiring pins gpio microphone inmp441 oled ssd1306 joystick buttons power 3.3v">
+  <p class="chapter-kicker">Chapter II · Electrical assembly</p><h2>Wiring &amp; safety</h2>
+  <p>Connect each module to the ESP32 Dev Kit V1 exactly as listed. All grounds must share a common ground. Keep the board unpowered while changing connections.</p>
+  <h3>Pin assignment register</h3>
+  <div class="table-wrap"><table><thead><tr><th>Module</th><th>Module pin</th><th>ESP32 connection</th><th>Notes</th></tr></thead><tbody>
+    <tr><td>SSD1306 OLED</td><td>SDA</td><td><code>GPIO21</code></td><td>I²C data</td></tr><tr><td>SSD1306 OLED</td><td>SCL</td><td><code>GPIO22</code></td><td>I²C clock</td></tr><tr><td>SSD1306 OLED</td><td>VCC / GND</td><td><code>3V3</code> / <code>GND</code></td><td>Address <code>0x3C</code></td></tr>
+    <tr><td>INMP441 mic</td><td>SCK</td><td><code>GPIO32</code></td><td>I²S clock</td></tr><tr><td>INMP441 mic</td><td>WS</td><td><code>GPIO25</code></td><td>I²S word select</td></tr><tr><td>INMP441 mic</td><td>SD</td><td><code>GPIO34</code></td><td>I²S data out</td></tr><tr><td>INMP441 mic</td><td>L/R, VDD, GND</td><td><code>GND</code>, <code>3V3</code>, <code>GND</code></td><td>L/R grounded for selected channel</td></tr>
+    <tr><td>MIC button</td><td>Two terminals</td><td><code>GPIO18</code> ↔ <code>GND</code></td><td>Momentary pushbutton</td></tr><tr><td>SEND button</td><td>Two terminals</td><td><code>GPIO23</code> ↔ <code>GND</code></td><td>Momentary pushbutton</td></tr>
+    <tr><td>Joystick</td><td>VRx</td><td><code>GPIO35</code></td><td>Horizontal axis</td></tr><tr><td>Joystick</td><td>VRy</td><td><code>GPIO36</code></td><td>Vertical axis</td></tr><tr><td>Joystick</td><td>SW</td><td><code>GPIO33</code> ↔ <code>GND</code></td><td>Press to select</td></tr><tr><td>Joystick</td><td>VCC / GND</td><td><code>3V3</code> / <code>GND</code></td><td>Do not feed 5 V to the axes</td></tr>
+  </tbody></table></div>
+  <div class="callout warning"><strong>Critical:</strong> the joystick breakout may label its supply pin “5V”. Connect that pin to the ESP32 <code>3V3</code> rail. GPIO35 and GPIO36 are not 5 V tolerant; a true 5 V joystick supply can put unsafe voltage on the analog inputs.</div>
+  <h3>Wiring sanity checks</h3><ul><li>Check that SDA and SCL have not been swapped.</li><li>Confirm the INMP441 L/R pin is tied to GND as shown.</li><li>Use normally-open buttons from their assigned GPIO to ground.</li><li>Do not power a module from a pin whose voltage rating you have not verified.</li></ul>
+</section>
+<section class="chapter" id="arduino" data-search="arduino ide board library install partition scheme upload serial monitor">
+  <p class="chapter-kicker">Chapter III · Firmware installation</p><h2>Arduino IDE setup</h2>
+  <h3>Board and flash settings</h3>
+  <div class="table-wrap"><table><thead><tr><th>Setting</th><th>Required selection</th></tr></thead><tbody><tr><td>Board</td><td><code>ESP32 Dev Module</code></td></tr><tr><td>Partition Scheme</td><td><code>No OTA (2MB APP/2MB SPIFFS)</code></td></tr><tr><td>Serial Monitor</td><td><code>115200</code> baud</td></tr></tbody></table></div>
+  <h3>Required libraries</h3><ul><li><code>Adafruit SSD1306</code> 2.5.x</li><li><code>Adafruit GFX Library</code> 1.11.x</li><li><code>NimBLE-Arduino</code> 2.x</li><li><code>ArduinoJson</code> 6.x</li></ul>
+  <ol class="steps"><li>Install ESP32 board support in Boards Manager if it is not already available.</li><li>Install the library versions above through Library Manager.</li><li>Open the supplied firmware source and select the ESP32 board and connected serial port.</li><li>Choose the exact partition scheme. The firmware stores raw recordings in LittleFS, so a suitable flash partition is necessary.</li><li>Compile and upload. If upload fails, verify the selected port and board before changing code.</li></ol>
+  <div class="callout"><strong>Storage note:</strong> the firmware mounts LittleFS and writes recordings to flash rather than keeping the entire recording in RAM. The configured partition is part of the design, not an optional performance tweak.</div>
+</section>
+<section class="chapter" id="ble" data-search="bluetooth ble setup wifi password api key endpoint model stt groq openrouter service uuid characteristic">
+  <p class="chapter-kicker">Chapter IV · Wireless provisioning</p><h2>Bluetooth setup</h2>
+  <p>Use Bluetooth to send the terminal your Wi-Fi name, Wi-Fi password, and API key settings. You do not need to edit the firmware or type these settings on the terminal itself. To open setup, hold MIC and SEND while powering it on.</p>
+  <ol class="steps"><li>Install or open a BLE GATT client on your phone or computer.</li><li>Power on the terminal while holding MIC and SEND together.</li><li>Scan for <code>ESP32-VoiceAI</code> and connect.</li><li>Open the writable characteristic shown below, then write the full text block as UTF-8 text with each setting on its own line.</li><li>No <code>END</code> line is required; the firmware reads the recognized settings line by line. After writing, allow the device to reconnect to Wi-Fi.</li></ol>
+  <h3>BLE identifiers</h3><div class="table-wrap"><table><thead><tr><th>Item</th><th>Value</th></tr></thead><tbody><tr><td>Advertised name</td><td><code>ESP32-VoiceAI</code></td></tr><tr><td>Service UUID</td><td><code>12345678-1234-1234-1234-123456789abc</code></td></tr><tr><td>Writable characteristic</td><td><code>abcdefab-cdef-abcd-efab-cdefabcdefab</code></td></tr></tbody></table></div>
+  <h3>Configuration template</h3>
+  <div class="codebox"><button class="copy" type="button" data-copy="config">Copy template</button><pre id="config">WIFI:your_wifi_name
+PASS:your_wifi_password
+API:your_chat_api_key
+ENDPOINT:https://openrouter.ai/api/v1/chat/completions
+MODEL:openrouter/free
+STT:your_speech_api_key
+STTURL:https://api.groq.com/openai/v1/audio/transcriptions
+STTMODEL:whisper-large-v3-turbo</pre></div>
+  <p>Replace the example Wi-Fi name, password, and API keys with your own values before sending. Do not include quotation marks. Keep every label (such as <code>WIFI:</code> and <code>API:</code>) exactly as shown, and leave each setting on a separate line. If you use the same API key for chat and speech transcription, you can remove the <code>STT:</code> line.</p>
+  <h3>Configuration fields</h3><div class="table-wrap"><table><thead><tr><th>Line</th><th>Purpose</th><th>Requirement</th></tr></thead><tbody><tr><td><code>WIFI:</code></td><td>Wi-Fi network name (SSID)</td><td>Required</td></tr><tr><td><code>PASS:</code></td><td>Wi-Fi password</td><td>Required for protected networks</td></tr><tr><td><code>API:</code></td><td>Chat API key</td><td>Required</td></tr><tr><td><code>ENDPOINT:</code></td><td>Chat-completions URL</td><td>Optional; OpenRouter default</td></tr><tr><td><code>MODEL:</code></td><td>Chat model identifier</td><td>Optional; <code>openrouter/free</code> default</td></tr><tr><td><code>STT:</code></td><td>Speech-to-text API key</td><td>Optional; defaults to chat key</td></tr><tr><td><code>STTURL:</code></td><td>Transcription API URL</td><td>Optional; Groq default</td></tr><tr><td><code>STTMODEL:</code></td><td>Transcription model identifier</td><td>Optional; Whisper default</td></tr></tbody></table></div>
+  <h3>Where to get your API keys</h3><p>Create an account with the service provider and find its API or developer dashboard. For the default settings in this template, use an OpenRouter API key for chat and a Groq API key for speech-to-text. Create or copy the key from the provider's dashboard, then paste it after the appropriate label above. An API key is not your normal account password.</p>
+  <div class="callout warning"><strong>Keep credentials private.</strong> Do not paste real Wi-Fi passwords or API keys into screenshots, public repositories, or public issue reports. Some providers require billing or available usage before requests work. Check your provider's dashboard for current access and limits.</div>
+</section>
+<section class="chapter" id="operation" data-search="operation controls mic send idle recording transcript review answer screen pages state machine">
+  <p class="chapter-kicker">Chapter V · Normal operation</p><h2>Operating states</h2>
+  <p>The same two buttons do different jobs depending on the screen. Check the current display before pressing a control.</p>
+  <div class="table-wrap"><table><thead><tr><th>Screen / state</th><th>MIC button</th><th>SEND button</th><th>Joystick press</th></tr></thead><tbody>
+    <tr><td>Idle / mic screen</td><td>Start recording</td><td>Show the last answer again, if one exists</td><td>Open keyboard</td></tr><tr><td>Recording</td><td>Stop recording and transcribe</td><td>—</td><td>—</td></tr><tr><td>Voice review (“You said”)</td><td>Discard transcript and record again</td><td>Send transcript to AI</td><td>—</td></tr><tr><td>Keyboard</td><td>Leave keyboard and return to mic screen</td><td>Submit current typed prompt</td><td>Choose highlighted key</td></tr><tr><td>Answer</td><td>Start a new voice recording</td><td>Advance to next answer page</td><td>Open keyboard for a new question</td></tr></tbody></table></div>
+  <div class="callout"><strong>Voice path:</strong> record → stop → review the transcript → SEND to ask the AI. If the transcript is wrong, use MIC on the review screen to discard it and record again.</div>
+  <div class="callout"><strong>Typed path:</strong> open the keyboard with the joystick press → navigate to keys → press to select → choose SND or press the physical SEND button to submit.</div>
+  <h3>What happens during voice input?</h3><p>Audio is captured at 16 kHz, mono, then written as raw 16-bit samples to flash. When recording stops, the firmware sends the audio to the configured transcription endpoint. The resulting text is shown for review before the chat request is made.</p>
+</section>
+<section class="chapter" id="keyboard" data-search="keyboard joystick key caps sym space delete autocorrect AC SND cursor rows">
+  <p class="chapter-kicker">Chapter VI · Text entry</p><h2>On-screen keyboard</h2>
+  <p>Move the joystick to move the highlight. Press the joystick switch to select the highlighted character or action. The keyboard has an alphabet layout and a symbol layout.</p>
+  <div class="grid-2"><div class="rule-card"><h3>Character keys</h3><p>Number row, alphabet rows, or punctuation/symbol rows. Letters use the current caps state.</p></div><div class="rule-card"><h3>Action keys</h3><p><span class="key">CAP</span> change letter case; <span class="key">SYM</span> switch to symbols; <span class="key">SPC</span> insert a space.</p></div><div class="rule-card"><h3>Edit &amp; submit</h3><p><span class="key">DEL</span> delete; <span class="key">AC</span> run the firmware's autocorrect action; <span class="key">SEND</span> submit the prompt.</p></div><div class="rule-card"><h3>Exit</h3><p>Press physical MIC to leave the keyboard and return to the mic screen. This does not start a recording from the keyboard state.</p></div></div>
+  <h3>Keyboard habits that prevent mistakes</h3><ul><li>Check whether the alphabet or symbol page is active before typing punctuation.</li><li>Use DEL to correct a typo before sending; the prompt buffer holds at most 128 characters.</li><li>Use the physical SEND button as a direct submit shortcut when needed.</li><li>Autocorrect is a convenience, not a guarantee. Review names, technical terms, URLs, and identifiers before submission.</li></ul>
+</section>
+<section class="chapter" id="limits" data-search="limits 30 seconds recording 960kb flash littlefs prompt 128 answer 100 lines six lines oled 21 chars">
+  <p class="chapter-kicker">Chapter VII · Operating limits</p><h2>Limits &amp; storage</h2>
+  <div class="table-wrap"><table><thead><tr><th>Item</th><th>Firmware value</th><th>Practical meaning</th></tr></thead><tbody><tr><td>Microphone sample rate</td><td><code>16000 Hz</code></td><td>16 kHz mono capture</td></tr><tr><td>Maximum recording</td><td><code>30 seconds</code></td><td>Keep voice prompts brief</td></tr><tr><td>Recording storage</td><td>About <code>960 KB</code> for 30 seconds</td><td>Raw samples are spooled to LittleFS</td></tr><tr><td>Typed prompt</td><td><code>128 characters</code></td><td>Long prompts must be shortened</td></tr><tr><td>OLED layout</td><td><code>128 × 64</code></td><td>Small screen; wrapped text is expected</td></tr><tr><td>Answer buffer</td><td>Up to <code>100 wrapped lines</code></td><td>Long answers are paged</td></tr><tr><td>Visible answer page</td><td><code>6 lines</code></td><td>Press SEND to advance</td></tr></tbody></table></div>
+  <p>These are firmware limits, not a promise that every network request will succeed. Provider limits, Wi-Fi quality, response size, and API availability can still affect a request.</p>
+</section>
+<section class="chapter" id="troubleshooting" data-search="troubleshooting no wifi ble not found mic silent transcription fail oled blank answer api timeout upload library">
+  <p class="chapter-kicker">Chapter VIII · Fault finding</p><h2>Troubleshooting</h2>
+  <div class="faq">
+    <details><summary>OLED stays blank</summary><p>Check 3V3 and GND first, then confirm SDA is GPIO21 and SCL is GPIO22. The firmware expects I²C address <code>0x3C</code>. Inspect the solder joints and module pin labels.</p></details>
+    <details><summary>BLE device does not appear</summary><p>Power-cycle while holding MIC and SEND together to force setup mode. Confirm the board has power and scan for <code>ESP32-VoiceAI</code>. Check Serial Monitor at 115200 baud for startup messages.</p></details>
+    <details><summary>Wi-Fi will not connect</summary><p>Re-enter the exact SSID and password, including case and spaces. Check that the network is reachable from the device's location. If credentials were changed, reopen BLE setup and send a fresh configuration.</p></details>
+    <details><summary>Recording starts but transcription fails</summary><p>Check Wi-Fi first, then verify the speech API key, transcription URL, and model name. Keep recordings under 30 seconds. If LittleFS failed to mount, the firmware reports that voice recording will not work.</p></details>
+    <details><summary>Voice is not recognized correctly</summary><p>Check the INMP441 pin mapping (SCK 32, WS 25, SD 34), 3V3 supply, common ground, and L/R-to-GND connection. Reduce background noise and speak close enough to the microphone without covering it.</p></details>
+    <details><summary>Typed input behaves strangely</summary><p>Verify joystick VRx is on GPIO35, VRy on GPIO36, SW on GPIO33, and joystick VCC is connected to 3V3. Check that the joystick press switch shares ground with the ESP32.</p></details>
+    <details><summary>Chat request fails while transcription works</summary><p>Check the chat key on the <code>API:</code> line, then confirm the chat endpoint and model identifier are accepted by your provider. The speech and chat services may use different credentials and different endpoints.</p></details>
+    <details><summary>Answer seems cut off</summary><p>Press SEND on the answer screen to advance through the available pages. The firmware stores a bounded number of wrapped lines; content beyond its buffer cannot be displayed.</p></details>
+    <details><summary>Compilation or upload errors</summary><p>Confirm ESP32 board support is installed, select <code>ESP32 Dev Module</code>, install the required library families, and use the <code>No OTA (2MB APP/2MB SPIFFS)</code> partition scheme. Check the first compiler error rather than fixing later cascade errors.</p></details>
+  </div>
+  <h3>Useful diagnostic order</h3><ol><li>Power and wiring.</li><li>Serial Monitor startup output.</li><li>BLE configuration values.</li><li>Wi-Fi connection.</li><li>Provider key, endpoint, and model.</li><li>Only then investigate firmware changes.</li></ol>
+</section>
+<section class="chapter" id="privacy" data-search="privacy security credentials api keys wifi password cloud audio transcription prompts tls certificate insecure setInsecure">
+  <p class="chapter-kicker">Chapter IX · Credentials &amp; data</p><h2>Privacy &amp; security notes</h2>
+  <ul><li>Wi-Fi credentials and API keys are provisioned to the device. Treat the terminal as a device holding secrets.</li><li>Voice recordings are written to the device's LittleFS storage before being sent for transcription. Voice processing depends on the configured cloud service.</li><li>Typed prompts and transcribed speech are sent to the configured chat service when submitted. Do not enter private information unless you are comfortable sending it to those providers.</li><li>Provider terms, retention, billing, and model availability are controlled by the providers, not by the device.</li></ul>
+  <div class="callout warning"><strong>Firmware security caveat:</strong> the supplied source uses <code>WiFiClientSecure::setInsecure()</code> in request paths. That disables TLS certificate verification. Encrypted transport alone does not authenticate the server in this configuration; do not treat it as suitable for sensitive use without correcting certificate validation.</div>
+  <p>Before sharing the project, remove real keys and passwords from configuration examples, serial logs, screenshots, and repository history. Rotate any key that has been exposed.</p>
+</section>
+<section class="chapter" id="checklist" data-search="bench checklist preflight commissioning verify checkbox before power on">
+  <p class="chapter-kicker">Appendix · Bench record</p><h2>Pre-flight checklist</h2>
+  <p>Use this list before first power-on or after rewiring. Check each item on the bench.</p>
+  <ul class="checklist"><li><label><input type="checkbox">OLED wired to GPIO21 / GPIO22 and powered from 3V3.</label></li><li><label><input type="checkbox">INMP441 wired to GPIO32 / GPIO25 / GPIO34; L/R grounded.</label></li><li><label><input type="checkbox">MIC and SEND buttons wired to GPIO18 and GPIO23, respectively.</label></li><li><label><input type="checkbox">Joystick axes wired to GPIO35 / GPIO36 and supply set to 3V3.</label></li><li><label><input type="checkbox">All grounds connected; no loose strands or shorts.</label></li><li><label><input type="checkbox">Correct ESP32 board, libraries, and flash partition selected.</label></li><li><label><input type="checkbox">BLE configuration contains the correct Wi-Fi and API values.</label></li><li><label><input type="checkbox">Typed test prompt returns an answer and SEND advances pages.</label></li><li><label><input type="checkbox">Short voice recording transcribes and appears for review.</label></li></ul>
+  <div class="callout"><strong>Record of build:</strong> board revision __________ · firmware date __________ · tested Wi-Fi __________ · notes __________________________________</div>
+</section>
+</div>
+</main>
+<footer class="footer"><div><strong>Field Manual No. 01</strong><br>ESP32 Voice + Joystick AI Terminal</div><div>Prepared from the supplied firmware source.<br>Provider APIs and library versions may change.</div><div><a href="#title">Return to title ↑</a></div></footer>
+</div>
+<script>
+(function () {
+  const search = document.getElementById('search');
+  const tocItems = Array.from(document.querySelectorAll('#toc li'));
+  const sections = Array.from(document.querySelectorAll('.chapter'));
+  const noResults = document.getElementById('no-results');
+  search.addEventListener('input', function () {
+    const query = search.value.trim().toLowerCase();
+    let visible = 0;
+    tocItems.forEach(function (item) {
+      const link = item.querySelector('a');
+      const target = document.querySelector(link.getAttribute('href'));
+      const text = (item.textContent + ' ' + (target ? target.textContent : '') + ' ' + (target ? target.dataset.search : '')).toLowerCase();
+      const match = !query || text.includes(query);
+      item.hidden = !match;
+      if (match) visible++;
+    });
+    sections.forEach(function (section) {
+      const match = !query || (section.textContent + ' ' + section.dataset.search).toLowerCase().includes(query);
+      section.hidden = !query ? false : !match;
+    });
+    noResults.style.display = visible ? 'none' : 'block';
+  });
+  document.querySelectorAll('[data-copy="config"]').forEach(function (button) {
+    button.addEventListener('click', async function () {
+      const text = document.getElementById('config').textContent;
+      try {
+        await navigator.clipboard.writeText(text);
+        button.textContent = 'Copied';
+      } catch (error) {
+        const range = document.createRange();
+        range.selectNodeContents(document.getElementById('config'));
+        const selection = window.getSelection();
+        selection.removeAllRanges();
+        selection.addRange(range);
+        button.textContent = 'Select & copy';
+      }
+      window.setTimeout(function () { button.textContent = 'Copy template'; }, 1800);
+    });
+  });
+})();
+</script>
+</body>
+</html>
